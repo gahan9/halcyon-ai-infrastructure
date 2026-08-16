@@ -44,9 +44,10 @@ module "registry" {
 
 resource "digitalocean_project_resources" "foundation" {
   project = module.network.project_id
+  # Valkey URNs are rejected by the Projects API resource-type allow-list in
+  # some accounts; keep the project assignment to PostgreSQL + Spaces only.
   resources = [
     module.managed_data.postgres_urn,
-    module.managed_data.valkey_urn,
     module.object_storage.bucket_urn,
   ]
 }

@@ -67,3 +67,7 @@ htmlcov/
 Thumbs.db
 .idea/
 *.swp
+
+tfplan
+scripts/_*.sh
+scripts/_tag_now.txt

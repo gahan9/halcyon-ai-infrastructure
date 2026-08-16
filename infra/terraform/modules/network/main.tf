@@ -13,8 +13,3 @@ resource "digitalocean_vpc" "this" {
   ip_range    = var.vpc_ip_range
   description = "Private network for ${var.environment} services"
 }
-
-resource "digitalocean_project_resources" "network" {
-  project   = digitalocean_project.this.id
-  resources = [digitalocean_vpc.this.urn]
-}

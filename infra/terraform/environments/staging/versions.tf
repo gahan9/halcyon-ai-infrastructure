@@ -10,5 +10,7 @@ terraform {
     }
   }
 
-  backend "s3" {}
+  # First staging exercise uses local state. Re-enable the S3-compatible
+  # backend (see backend.hcl) once an encrypted remote backend is approved.
+  # backend "s3" {}
 }

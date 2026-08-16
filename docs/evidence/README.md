@@ -7,6 +7,12 @@ customer’s migration. Offline unit tests and static IaC/App Spec artifacts now
 exist. **Live apply, deploy, load, chaos, restore, and production-readiness
 claims remain blocked** until checklist approvals and spend authorization.
 
+An authorized **staging-only** bring-up experiment is recorded in
+[staging-bring-up.md](staging-bring-up.md). That note documents foundations,
+App Platform smoke (`/healthz`, upload → `202`, status → `succeeded`), and
+temporary local-auth exceptions. It does **not** satisfy the production-readiness
+gates below.
+
 ## Planned demonstrations
 
 | Evidence | Pass criteria | Artifact to capture |

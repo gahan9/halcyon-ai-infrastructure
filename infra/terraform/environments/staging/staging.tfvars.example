@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MIT
+# Non-secret example values; verify current DigitalOcean SKU availability.
+
+project_name              = "halcyon-part1-staging"
+region                    = "nyc3"
+vpc_ip_range              = "10.20.0.0/24"
+postgres_version          = "16"
+postgres_size             = "db-s-1vcpu-1gb"
+postgres_storage_size_mib = 10240
+valkey_version            = "8"
+valkey_size               = "db-s-1vcpu-1gb"
+spaces_bucket_name        = "replace-with-globally-unique-staging-bucket"
+spaces_force_destroy      = false
+registry_name             = "replace-with-unique-staging-registry"
+registry_subscription_tier_slug = "starter"

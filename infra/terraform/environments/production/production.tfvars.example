@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MIT
+# Non-secret example values; verify current DigitalOcean SKU availability.
+
+project_name                 = "halcyon-part1-production"
+region                       = "nyc3"
+vpc_ip_range                 = "10.30.0.0/24"
+postgres_version             = "16"
+postgres_size                = "db-s-1vcpu-2gb"
+postgres_standby_count       = 1
+postgres_storage_size_mib    = 20480
+valkey_version               = "8"
+valkey_size                  = "db-s-1vcpu-2gb"
+valkey_standby_count         = 1
+spaces_bucket_name           = "replace-with-globally-unique-production-bucket"
+registry_name                = "replace-with-unique-production-registry"
+registry_subscription_tier_slug = "starter"

@@ -1,0 +1,132 @@
+# SPDX-License-Identifier: MIT
+# Versioned App Spec for Part 1 (Option B).
+# Secure CI owns deployment and SECRET injection. Terraform does not manage
+# digitalocean_app. Do not apply until spend and checklist approvals exist.
+name: halcyon-sim
+region: nyc
+features:
+  - buildpack-stack=ubuntu-22
+services:
+  - name: api
+    image:
+      registry_type: DOCR
+      registry: REPLACE_REGISTRY
+      repository: halcyon-sim
+      tag: "REPLACE_DIGEST_OR_TAG"
+    instance_count: 2
+    instance_size_slug: professional-xs
+    http_port: 8080
+    health_check:
+      http_path: /healthz
+      initial_delay_seconds: 10
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: APP_ENV
+        scope: RUN_TIME
+        value: staging
+      - key: APP_PORT
+        scope: RUN_TIME
+        value: "8080"
+      - key: AUTH_MODE
+        scope: RUN_TIME
+        value: fail_closed
+      - key: UPLOAD_SCAN_REQUIRED
+        scope: RUN_TIME
+        value: "false"
+      - key: SIMULATED_TIMEOUT_RATE
+        scope: RUN_TIME
+        value: "0"
+      - key: SIMULATED_FAILURE_RATE
+        scope: RUN_TIME
+        value: "0"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: VALKEY_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: SPACES_ENDPOINT
+        scope: RUN_TIME
+        value: REPLACE_SPACES_ENDPOINT
+      - key: SPACES_BUCKET
+        scope: RUN_TIME
+        value: REPLACE_SPACES_BUCKET
+      - key: SPACES_REGION
+        scope: RUN_TIME
+        value: nyc3
+      - key: SPACES_CREDENTIALS_JSON
+        scope: RUN_TIME
+        type: SECRET
+    run_command: python -m halcyon_sim.api
+workers:
+  - name: worker
+    image:
+      registry_type: DOCR
+      registry: REPLACE_REGISTRY
+      repository: halcyon-sim
+      tag: "REPLACE_DIGEST_OR_TAG"
+    instance_count: 2
+    instance_size_slug: professional-xs
+    # App Platform termination grace up to 600s for long simulation jobs.
+    envs:
+      - key: APP_ENV
+        scope: RUN_TIME
+        value: staging
+      - key: AUTH_MODE
+        scope: RUN_TIME
+        value: fail_closed
+      - key: WORKER_CONCURRENCY
+        scope: RUN_TIME
+        value: "2"
+      - key: INFERENCE_MAX_CONCURRENCY
+        scope: RUN_TIME
+        value: "10"
+      - key: INFERENCE_TIMEOUT_SECONDS
+        scope: RUN_TIME
+        value: "240"
+      - key: JOB_MAX_RETRIES
+        scope: RUN_TIME
+        value: "3"
+      - key: JOB_LEASE_SECONDS
+        scope: RUN_TIME
+        value: "570"
+      - key: WORKER_GRACE_PERIOD_SECONDS
+        scope: RUN_TIME
+        value: "600"
+      - key: SIMULATED_TIMEOUT_RATE
+        scope: RUN_TIME
+        value: "0"
+      - key: SIMULATED_FAILURE_RATE
+        scope: RUN_TIME
+        value: "0"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: VALKEY_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: SPACES_ENDPOINT
+        scope: RUN_TIME
+        value: REPLACE_SPACES_ENDPOINT
+      - key: SPACES_BUCKET
+        scope: RUN_TIME
+        value: REPLACE_SPACES_BUCKET
+      - key: SPACES_REGION
+        scope: RUN_TIME
+        value: nyc3
+      - key: SPACES_CREDENTIALS_JSON
+        scope: RUN_TIME
+        type: SECRET
+      - key: LLM_BASE_URL
+        scope: RUN_TIME
+        value: https://inference.do-ai.run
+      - key: LLM_MODEL
+        scope: RUN_TIME
+        value: REPLACE_MODEL_ID
+      - key: LLM_CREDENTIALS_JSON
+        scope: RUN_TIME
+        type: SECRET
+    run_command: python -m halcyon_sim.worker

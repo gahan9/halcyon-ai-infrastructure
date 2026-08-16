@@ -1,0 +1,87 @@
+# SPDX-License-Identifier: MIT
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "halcyon-sim"
+version = "0.1.0"
+description = "Halcyon Part 1 asynchronous PDF upload and inference simulation"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Halcyon FDE" }]
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "httpx>=0.27.0",
+  "pydantic>=2.9.0",
+  "pydantic-settings>=2.6.0",
+  "sqlalchemy[asyncio]>=2.0.36",
+  "asyncpg>=0.30.0",
+  "redis>=5.2.0",
+  "boto3>=1.35.0",
+  "python-multipart>=0.0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.24.0",
+  "pytest-cov>=6.0.0",
+  "pytest-xdist>=3.6.0",
+  "ruff>=0.8.0",
+  "mypy>=1.13.0",
+  "bandit>=1.8.0",
+  "pip-audit>=2.7.0",
+  "types-boto3>=1.0.2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/halcyon_sim"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+  "integration: component interaction tests (skip without credentials)",
+]
+
+[tool.coverage.run]
+source = ["halcyon_sim"]
+branch = true
+omit = [
+  "*/halcyon_sim/jobs_sql.py",
+  "*/halcyon_sim/__main__.py",
+]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_empty = true
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+  "B008",  # FastAPI Depends/File defaults are intentional
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["halcyon_sim"]
+mypy_path = "src"
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["boto3", "botocore.*", "redis.*"]
+ignore_missing_imports = true

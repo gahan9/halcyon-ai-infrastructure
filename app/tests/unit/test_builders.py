@@ -10,8 +10,10 @@ from pydantic import SecretStr
 
 from halcyon_sim.config import Settings
 from halcyon_sim.inference import FakeInferenceClient, build_inference_client
-from halcyon_sim.queue import build_job_queue
-from halcyon_sim.storage import build_object_storage
+from halcyon_sim.jobs import InMemoryJobRepository
+from halcyon_sim.queue import InMemoryJobQueue, build_job_queue
+from halcyon_sim.runtime import build_runtime_stack, cloud_backends_requested
+from halcyon_sim.storage import InMemoryObjectStorage, build_object_storage
 
 
 def test_build_object_storage_requires_settings() -> None:
@@ -48,3 +50,19 @@ def test_build_job_queue_requires_url() -> None:
 def test_build_inference_client_local_fake() -> None:
     client = build_inference_client(Settings(_env_file=None))
     assert isinstance(client, FakeInferenceClient)
+
+
+def test_build_runtime_stack_defaults_to_memory() -> None:
+    stack = build_runtime_stack(Settings(_env_file=None))
+    assert isinstance(stack.jobs, InMemoryJobRepository)
+    assert isinstance(stack.queue, InMemoryJobQueue)
+    assert isinstance(stack.storage, InMemoryObjectStorage)
+    assert stack.engine is None
+    assert cloud_backends_requested(Settings(_env_file=None)) is False
+
+
+def test_build_runtime_stack_rejects_partial_cloud() -> None:
+    with pytest.raises(ValueError, match="DATABASE_URL and VALKEY_URL"):
+        build_runtime_stack(
+            Settings(_env_file=None, database_url=SecretStr("postgresql://x"))
+        )

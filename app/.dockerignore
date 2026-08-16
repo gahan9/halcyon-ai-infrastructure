@@ -1,8 +1,5 @@
 # SPDX-License-Identifier: MIT
-README.md
 Dockerfile
-pyproject.toml
-uv.lock
 .venv
 **/__pycache__
 **/*.pyc
@@ -12,3 +9,5 @@ uv.lock
 .coverage
 htmlcov
 tests
+*.egg-info
+.Python

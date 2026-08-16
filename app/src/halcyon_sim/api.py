@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from uuid import UUID, uuid4
 
 import uvicorn
@@ -14,19 +16,20 @@ from pydantic import BaseModel, Field
 from halcyon_sim.auth import AuthProvider, Principal, build_auth_provider
 from halcyon_sim.config import Settings
 from halcyon_sim.jobs import (
-    InMemoryJobRepository,
     JobRepository,
     JobStatus,
     is_enqueueable,
     new_job,
 )
+from halcyon_sim.jobs_sql import create_schema
 from halcyon_sim.pdf_validate import (
     UploadValidationError,
     sanitize_filename,
     validate_pdf_bytes,
 )
-from halcyon_sim.queue import InMemoryJobQueue, JobQueue
-from halcyon_sim.storage import InMemoryObjectStorage, ObjectStorage
+from halcyon_sim.queue import JobQueue
+from halcyon_sim.runtime import RuntimeStack, build_runtime_stack
+from halcyon_sim.storage import ObjectStorage
 
 logger = logging.getLogger(__name__)
 
@@ -73,18 +76,39 @@ def create_app(
     jobs: JobRepository | None = None,
     queue: JobQueue | None = None,
     storage: ObjectStorage | None = None,
+    stack: RuntimeStack | None = None,
 ) -> FastAPI:
     """Build the FastAPI application with injectable collaborators."""
 
     resolved_settings = settings or Settings()
+    if jobs is not None and queue is not None and storage is not None:
+        resolved_jobs = jobs
+        resolved_queue = queue
+        resolved_storage = storage
+        engine = None if stack is None else stack.engine
+    else:
+        resolved_stack = stack or build_runtime_stack(resolved_settings)
+        resolved_jobs = jobs or resolved_stack.jobs
+        resolved_queue = queue or resolved_stack.queue
+        resolved_storage = storage or resolved_stack.storage
+        engine = resolved_stack.engine
     state = AppState(
         settings=resolved_settings,
         auth=auth or build_auth_provider(resolved_settings),
-        jobs=jobs or InMemoryJobRepository(),
-        queue=queue or InMemoryJobQueue(),
-        storage=storage or InMemoryObjectStorage(),
+        jobs=resolved_jobs,
+        queue=resolved_queue,
+        storage=resolved_storage,
     )
-    app = FastAPI(title="halcyon-sim", version="0.1.0")
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        if engine is not None:
+            await create_schema(engine)
+        yield
+        if engine is not None:
+            await engine.dispose()
+
+    app = FastAPI(title="halcyon-sim", version="0.1.0", lifespan=lifespan)
     app.state.halcyon = state
 
     @app.get("/healthz")

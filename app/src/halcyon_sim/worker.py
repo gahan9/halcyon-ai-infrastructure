@@ -13,14 +13,12 @@ from uuid import UUID
 from halcyon_sim.config import Settings
 from halcyon_sim.faults import FaultOutcome, FaultPolicy
 from halcyon_sim.inference import (
-    FakeInferenceClient,
     InferenceClient,
     InferenceError,
     InferenceErrorKind,
 )
 from halcyon_sim.jobs import (
     CLAIMABLE,
-    InMemoryJobRepository,
     JobAttempt,
     JobRepository,
     JobStatus,
@@ -28,8 +26,10 @@ from halcyon_sim.jobs import (
     complete_success,
     complete_terminal_failure,
 )
-from halcyon_sim.queue import InMemoryJobQueue, JobQueue
-from halcyon_sim.storage import InMemoryObjectStorage, ObjectStorage
+from halcyon_sim.jobs_sql import create_schema
+from halcyon_sim.queue import JobQueue
+from halcyon_sim.runtime import build_runtime_stack
+from halcyon_sim.storage import ObjectStorage
 
 logger = logging.getLogger(__name__)
 
@@ -100,14 +100,6 @@ class Worker:
         if claimed is None:
             await self.queue.acknowledge(job_id)
             return
-
-        await self.jobs.record_attempt(
-            JobAttempt(
-                job_id=claimed.job_id,
-                attempt_number=claimed.attempt_count,
-                outcome="started",
-            )
-        )
 
         delay = self.policy.work_seconds(
             str(claimed.job_id),
@@ -222,30 +214,47 @@ class Worker:
 
 
 def build_worker(settings: Settings | None = None) -> Worker:
-    """Construct a worker with local fakes when cloud settings are absent."""
+    """Construct a worker with cloud adapters when configured, else local fakes."""
 
     resolved = settings or Settings()
-    policy = FaultPolicy(
-        seed=resolved.simulation_seed,
-        timeout_rate=resolved.simulated_timeout_rate,
-        failure_rate=resolved.simulated_failure_rate,
-    )
+    stack = build_runtime_stack(resolved)
     return Worker(
         settings=resolved,
-        jobs=InMemoryJobRepository(inference_slots=resolved.inference_max_concurrency),
-        queue=InMemoryJobQueue(),
-        storage=InMemoryObjectStorage(),
-        inference=FakeInferenceClient(policy=policy, model=resolved.llm_model),
-        policy=policy,
+        jobs=stack.jobs,
+        queue=stack.queue,
+        storage=stack.storage,
+        inference=stack.inference,
+        policy=stack.policy,
     )
+
+
+async def _run_worker() -> None:
+    """Ensure schema exists when using PostgreSQL, then process jobs."""
+
+    settings = Settings()
+    stack = build_runtime_stack(settings)
+    if stack.engine is not None:
+        await create_schema(stack.engine)
+    worker = Worker(
+        settings=settings,
+        jobs=stack.jobs,
+        queue=stack.queue,
+        storage=stack.storage,
+        inference=stack.inference,
+        policy=stack.policy,
+    )
+    try:
+        await worker.run_forever()
+    finally:
+        if stack.engine is not None:
+            await stack.engine.dispose()
 
 
 def main() -> None:  # pragma: no cover
     """Run the worker until signalled."""
 
     logging.basicConfig(level=logging.INFO)
-    worker = build_worker()
-    asyncio.run(worker.run_forever())
+    asyncio.run(_run_worker())
 
 
 if __name__ == "__main__":

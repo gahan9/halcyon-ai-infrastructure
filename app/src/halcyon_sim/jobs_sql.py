@@ -276,6 +276,8 @@ def create_engine(database_url: str) -> AsyncEngine:
     url = database_url
     if url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # asyncpg rejects libpq sslmode=; DigitalOcean URIs use sslmode=require.
+    url = url.replace("sslmode=require", "ssl=require")
     return create_async_engine(url, pool_pre_ping=True)
 
 

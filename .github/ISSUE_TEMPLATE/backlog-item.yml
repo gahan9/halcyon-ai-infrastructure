@@ -1,0 +1,54 @@
+name: Backlog item (from .ai/memory/prospective/backlog.md)
+description: >-
+  Mirror a row from the local prospective-memory backlog into a GitHub
+  Issue. The local backlog.md row remains the source of truth; write the
+  resulting issue URL back into that row's "issue" column.
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        See `.ai/memory/prospective/backlog.md` and
+        `.ai/memory/GOVERNANCE.md` (Prospective memory and GitHub Issues)
+        for the field mapping this template follows.
+  - type: input
+    id: backlog-id
+    attributes:
+      label: Backlog row id
+      description: The `id` column value from backlog.md, e.g. "example-001".
+      placeholder: example-001
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      description: Maps to label memory-type/<value>.
+      options:
+        - bug
+        - feature
+        - chore
+        - roadmap
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Maps to label priority/<value>.
+      options:
+        - p0
+        - p1
+        - p2
+        - p3
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: >-
+        Copy the row's title and, if present, the linked prospective note's
+        Goal/Trigger content.
+    validations:
+      required: true

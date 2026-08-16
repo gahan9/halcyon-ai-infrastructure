@@ -1,0 +1,73 @@
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+runtime-credentials*.json
+*.secret.json
+*.decrypted.json
+secrets.yaml
+secrets.yml
+token.txt
+service-account*.json
+
+# Terraform local state, plans, caches, and unreviewed variable files
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+!*.tfvars.json.example
+
+# Cloud auth
+.vault-token
+.aws/credentials
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Hook session flag
+.ai/.pre-agentic-ran
+
+# Cursor skill links (regenerate with setup-links.py)
+.cursor/skills/
+
+# Campaign working state (content-marketing-expert memory shots)
+.content-campaign/
+
+# Agentic memory: ephemeral per-session scratch, never committed
+.ai/memory/_session/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+tfplan
+scripts/_*.sh
+scripts/_tag_now.txt

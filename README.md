@@ -36,6 +36,22 @@ and [docs/decisions/ADR-001-part1-platform.md](docs/decisions/ADR-001-part1-plat
 | Simulated app + Terraform apply + live endpoint | **TBD** |
 
 
+## Document map
+
+| Audience | Document |
+|----------|----------|
+| Dana (client) | [docs/client/clarification-checklist.md](docs/client/clarification-checklist.md) |
+| Dana + FDE | [docs/client/assumption-log.md](docs/client/assumption-log.md) |
+| Dana + CTO | [docs/architecture/tradeoffs-rpo-rto.md](docs/architecture/tradeoffs-rpo-rto.md) |
+| Dana + CTO | [docs/architecture/tradeoffs-compute-platform.md](docs/architecture/tradeoffs-compute-platform.md) |
+| Engineering | [docs/architecture/part1-production-platform.md](docs/architecture/part1-production-platform.md) |
+| Engineering (alternative) | [docs/architecture/doks-exercise-variant.md](docs/architecture/doks-exercise-variant.md) |
+| Engineering | [docs/architecture/part2-self-hosted-inference.md](docs/architecture/part2-self-hosted-inference.md) |
+| Decision record | [docs/decisions/ADR-001-part1-platform.md](docs/decisions/ADR-001-part1-platform.md) |
+| Future proof | [docs/evidence/README.md](docs/evidence/README.md) |
+| Executive status | [pm/reports/exec-briefing-2026-08-15.md](pm/reports/exec-briefing-2026-08-15.md) |
+| Executive slide | [presentations/2026-08-15-exec-briefing.pptx](presentations/2026-08-15-exec-briefing.pptx) |
+
 ## Repository layout
 
 ```

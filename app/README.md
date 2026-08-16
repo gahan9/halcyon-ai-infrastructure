@@ -18,11 +18,14 @@ Lightweight workload for the FDE exercise — **not** a real contract parser.
    extraction.
 6. A worker claims only `accepted`/`retry` work, sleeps a seeded
    **20 seconds – 4 minutes**, then calls DigitalOcean
-   Serverless Inference through one async gateway client with a hard timeout.
+   Serverless Inference through one async gateway client with a 240-second hard
+   timeout and a PostgreSQL-enforced provisional fleet-wide concurrency cap of
+   10.
 7. An injected fault policy deterministically selects success, timeout, or
    failure in tests/staging. Simulation is disabled and guarded in production.
-8. Workers are idempotent, acknowledge only after durable state, retry within a
-   ceiling, and dead-letter exhausted jobs in PostgreSQL.
+8. Workers are idempotent, acknowledge only after durable state, and allow the
+   initial attempt plus at most three retries. Exhausted jobs are dead-lettered
+   in PostgreSQL and reported as terminal failures.
 
 ## Selected stack
 
@@ -33,8 +36,10 @@ Lightweight workload for the FDE exercise — **not** a real contract parser.
 | Job ledger / DLQ | Managed PostgreSQL via async SQLAlchemy + `asyncpg` |
 | Queue | Managed Valkey via `redis` asyncio client |
 | Object storage | Private DigitalOcean Spaces via an async-safe S3 adapter |
-| Configuration | `pydantic-settings`; secret values use `SecretStr` |
+| Configuration | `pydantic-settings`; private database/Valkey bindables plus scoped Spaces/inference JSON secrets parsed at runtime into `SecretStr` fields and never persisted/logged |
 | Tests | pytest, seeded fault policy, mocked HTTP/database/storage clients |
+| Load / soak | Locust against staging API only; not a substitute for app fault injection |
+| Failure drills | Small staging-only scripts for worker kill, queue-item loss, and deploy drain |
 
 RabbitMQ/Celery and Kafka are intentionally excluded. DigitalOcean platform does not
 provide managed RabbitMQ, and event-stream replay is a requirement for this simulation.

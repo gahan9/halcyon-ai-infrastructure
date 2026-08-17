@@ -212,6 +212,7 @@ This document is intended to stand alone. The following provide implementation
 and audit detail:
 
 - [Part 1 architecture](../architecture/part1-production-platform.md)
+- [Part 2 AI design](../architecture/part2-self-hosted-inference.md)
 - [Decision record](../decisions/ADR-001-part1-platform.md)
 - [Assumption log](../client/assumption-log.md)
 - [Clarification checklist](../client/clarification-checklist.md)

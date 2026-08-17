@@ -1,0 +1,7 @@
+---
+description: Project rule — memory
+globs:
+alwaysApply: true
+---
+
+Follow the rule defined in `.ai/rules/memory.md`.

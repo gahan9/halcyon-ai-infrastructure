@@ -38,6 +38,7 @@ module "registry" {
   source = "../registry"
 
   registry_name          = var.registry_name
+  create_registry        = var.create_registry
   region                 = var.region
   subscription_tier_slug = var.registry_subscription_tier_slug
 }

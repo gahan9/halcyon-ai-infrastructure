@@ -2,6 +2,12 @@
 
 # Halcyon AI Infrastructure — Executive Briefing | 2026-08-15
 
+> **Superseded for submission status:** staging smoke and the simulated app are
+> live as of 2026-08-17. Use
+> [dana-recommendation.md](../../docs/recommendation/dana-recommendation.md),
+> [access.md](../../docs/evidence/access.md), and the root README for current
+> state. Production evidence gates remain FAIL.
+
 ## Three-bullet summary
 
 - 🟡 **Halcyon Part 1 is at risk** — all **5 primary requirements** map to

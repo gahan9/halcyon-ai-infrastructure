@@ -1,16 +1,14 @@
 <!-- SPDX-License-Identifier: MIT -->
 
-# Terraform foundation (not applied)
+# Terraform foundation
 
-**Phase:** Modules and thin environment roots now exist; deployment remains
-gated.
+**Phase:** Modules and environment roots are ready for staging (already exercised)
+and production *prep*. Production apply remains a reviewed, human-gated step —
+see [docs/operations/production-prep.md](../../docs/operations/production-prep.md).
 
-The Option B foundation modules under `modules/` and the `staging` /
-`production` roots under `environments/` are ready for formatting and
-validation. Do not apply them until the client confirms the remaining ADR-001
-decisions, backend locking and access controls are verified, current
-DigitalOcean SKUs are checked, and a reviewed plan passes the documented
-approval gates.
+Do not apply production until remote state exists (`scripts/bootstrap_tf_state.sh`),
+current DigitalOcean SKUs are checked, a reviewed plan is on disk, and
+`CONFIRM_PRODUCTION_APPLY=yes` is set deliberately.
 
 ## Implemented foundation modules
 

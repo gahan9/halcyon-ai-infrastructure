@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: MIT
 
 terraform {
-  # use_lockfile on the S3-compatible backend requires Terraform 1.10+.
   required_version = ">= 1.10.0, < 2.0.0"
 
   required_providers {
@@ -10,6 +9,4 @@ terraform {
       version = ">= 2.45.0, < 3.0.0"
     }
   }
-
-  backend "s3" {}
 }

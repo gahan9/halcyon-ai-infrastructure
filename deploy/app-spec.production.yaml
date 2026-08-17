@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 # Production App Spec template. Promote only after staging evidence and approvals.
-# Replace placeholders; inject SECRET values from the protected CI channel only.
+# Replace placeholders from deploy/production.nonsecret.env.example after Terraform
+# apply. Inject SECRET values from the protected CI channel only.
+# See docs/operations/production-prep.md.
 name: halcyon-sim
 region: nyc
 features:

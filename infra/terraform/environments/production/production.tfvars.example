@@ -1,16 +1,23 @@
 # SPDX-License-Identifier: MIT
-# Non-secret example values; verify current DigitalOcean SKU availability.
+# Non-secret production values. Copy to production.tfvars (gitignored) and
+# replace TIMESTAMP with UTC YYYYMMDDHHMM so Spaces/registry names are unique.
+# Verify current DigitalOcean SKU availability before apply.
+#
+# Prep defaults (assumption log): HA Postgres + Valkey, nyc3, RPO≤15m / RTO≤60m
+# planning envelope. Platform spend stays inside the ~$360–750/mo band excl.
+# inference until CTO sets a hard ceiling.
 
-project_name                 = "halcyon-part1-production"
-region                       = "nyc3"
-vpc_ip_range                 = "10.30.0.0/24"
-postgres_version             = "16"
-postgres_size                = "db-s-1vcpu-2gb"
-postgres_standby_count       = 1
-postgres_storage_size_mib    = 20480
-valkey_version               = "8"
-valkey_size                  = "db-s-1vcpu-2gb"
-valkey_standby_count         = 1
-spaces_bucket_name           = "replace-with-globally-unique-production-bucket"
-registry_name                = "replace-with-unique-production-registry"
+project_name                    = "halcyon-part1-production"
+region                          = "nyc3"
+vpc_ip_range                    = "10.30.0.0/24"
+postgres_version                = "16"
+postgres_size                   = "db-s-1vcpu-2gb"
+postgres_standby_count          = 1
+postgres_storage_size_mib       = 30720
+valkey_version                  = "8"
+valkey_size                     = "db-s-1vcpu-2gb"
+valkey_standby_count            = 1
+spaces_bucket_name              = "halcyon-part1-prd-TIMESTAMP"
+create_registry                 = false
+registry_name                   = "halcyonstg202608161050"
 registry_subscription_tier_slug = "starter"

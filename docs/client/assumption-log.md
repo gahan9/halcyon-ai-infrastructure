@@ -283,6 +283,17 @@ restore, or live integration evidence.
 | **Validate by** | Checklist §D |
 | **Reopen when** | Hard ceiling is stated in writing |
 
+### A-PROD-PREP-01 — Production prep proceeds on assumption-log defaults
+
+| Field | Value |
+|-------|--------|
+| **Statement** | Engineering may prepare production Terraform (remote Spaces state + `use_lockfile`), HA foundation tfvars, App Spec, and human-gated apply scripts using the reversible defaults in this log (RPO≤15m/RTO≤60m, ~$360–750/mo platform band excl. inference, fail_closed auth, scan off, provisional 2 API + 2 workers). Prep does **not** authorize unattended apply or a production-ready claim; those still require reviewed plan confirmation, evidence gates, and Dana/CTO hard answers. |
+| **Confidence** | High for unblocking prep; Medium for the numeric defaults |
+| **Impact if wrong** | Harder SLA/budget/identity answers may force SKU or App Spec changes before cutover. |
+| **Owner** | FDE (prep) + Dana/CTO (hard lock) |
+| **Validate by** | `scripts/production_tf_prep.sh` plan review; checklist answers; evidence pack |
+| **Reopen when** | Dana/CTO publish conflicting ceiling, SLA, residency, or identity requirements |
+
 ---
 
 ## Confidence summary

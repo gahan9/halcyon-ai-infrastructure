@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: MIT
 
 terraform {
-  required_version = ">= 1.5.0, < 2.0.0"
+  # use_lockfile on the S3-compatible backend requires Terraform 1.10+.
+  required_version = ">= 1.10.0, < 2.0.0"
 
   required_providers {
     digitalocean = {
@@ -10,7 +11,8 @@ terraform {
     }
   }
 
-  # First staging exercise uses local state. Re-enable the S3-compatible
-  # backend (see backend.hcl) once an encrypted remote backend is approved.
+  # Local state was used for the first staging exercise. After
+  # scripts/bootstrap_tf_state.sh, enable the backend and migrate:
+  #   terraform init -migrate-state -backend-config=backend.hcl
   # backend "s3" {}
 }

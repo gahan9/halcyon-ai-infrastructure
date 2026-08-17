@@ -14,41 +14,39 @@ and use **managed Valkey** only to move job IDs. Terraform creates foundational
 resources; reviewed CI deploys the application from a versioned App Spec—not by
 SSH.
 
-**Status (2026-08-16):** The architecture and delivery plan are complete enough
-to start reversible local work. The application, Terraform, staging environment,
-and production evidence have not been built. Paid staging and production remain
-behind explicit approval and evidence gates.
+**Status (2026-08-17):** The simulated application, Terraform foundations,
+versioned App Specs, blocking CI, and a **live staging smoke** are built and
+reachable. Staging proves upload → async job → status on real managed services.
+**Production approval is not granted:** measured load, soak, rollback,
+dependency failure, restore, security, and capacity-headroom evidence remain
+open. See [access instructions](../evidence/access.md) and
+[evidence gates](../evidence/README.md).
 
 ## What exists today—and what does not
 
-### Completed in this repository
+### Built and demonstrated
 
-- A recommended architecture and decision record for App Platform, managed
-  PostgreSQL, managed Valkey, and private Spaces.
-- A secure upload and vendor-isolation design: the authenticated identity,
-  never a filename or form field, determines who owns a contract.
-- A durable job-state design with retries, idempotency, reconciliation, and a
-  dead-letter state for work that cannot complete.
-- A two-part Terraform design: reusable foundation modules plus separate
-  staging and production environment roots.
-- A delivery design in which Terraform owns foundations and secure App Spec CI
-  owns the application release and runtime secrets.
-- An assumption log, client decision checklist, six-week sequence, and binary
-  evidence plan for load, failures, restore, failover, rollback, and security.
-- A simulation test strategy: seeded application faults for deterministic retry
-  tests, Locust for staging load/soak, and guarded custom scripts for worker or
-  queue failure drills.
+- FastAPI simulation plus worker: vendor-scoped upload, PostgreSQL ledger,
+  Valkey wake queue, private Spaces, async inference gateway, retries, DLQ.
+- Terraform modules and staging/production roots; staging foundations applied.
+- Live staging endpoint with documented temporary FakeAuth (any Bearer token
+  maps to a vendor id for the exercise).
+- Blocking CI: lint, strict typing, unit tests, security scans, Terraform
+  validate, container image build.
+- Staging smoke: `GET /healthz`, `POST /v1/contracts` → `202`, poll to
+  `succeeded`. Reproducible via [access instructions](../evidence/access.md).
 
-### Not yet completed
+### Still not done (blocks production claim)
 
-- No FastAPI simulation or worker implementation.
-- No executable Terraform modules or App Spec deployment.
-- No live DigitalOcean staging or production resources.
-- No measured capacity, monthly bill, restore, failover, load, soak, or rollback
-  evidence.
+- Representative load, sustained soak, and measured monthly bill.
+- Worker-kill, queue-loss, rolling deploy, rollback, restore, and failover drills
+  attached as reviewed evidence.
+- Real identity provider, malware-scanning product selection, and production
+  `AUTH_MODE=fail_closed` on the live app.
+- Production foundations apply and go-live authorization.
 
-The repository is therefore a **reviewed design scaffold**, not a deployed
-platform and not a production-readiness certificate.
+This submission is a **working staging exercise plus a reviewed design**, not a
+production-readiness certificate.
 
 ## How the proposed system works
 
@@ -90,38 +88,12 @@ queue or worker failure from silently deleting accepted jobs.
 | Terraform foundations + App Spec CI | Makes environments reproducible while keeping arbitrary runtime JSON secrets out of Terraform inputs |
 | Seeded faults + Locust + scripts | Separates deterministic business-rule tests, load/soak tests, and real platform failure drills |
 
-## Safe assumptions that let us proceed
+## Decisions still open
 
-These are defaults, not customer promises. Each can be changed at a defined
-decision gate. Every temporary assumption must be written, assigned an owner,
-and given a review/expiry date before the related change merges.
-
-| Decision | Safe working default | Must close before | Owner |
-|----------|----------------------|-------------------|-------|
-| Final traffic shape | Test 2 API instances, 2 workers, concurrency 2 per worker, and fleet inference cap 10 | Production sizing and final cost | Dana + migration lead |
-| Recovery target | Plan job-metadata RPO ≤15 minutes and RTO ≤60 minutes | Production approval and SLA claim | Dana + CTO |
-| Budget ceiling | Plan ~$360–750/month, excluding inference | Paid production apply | CTO / budget owner |
-| Identity provider | Authentication adapter; fake identity is local only | Paid staging, unless a named expiring staging-auth exception is approved | Dana + Security |
-| Malware scanning | Scanner/release interface; fail closed where scanning is required | Processing real customer files | Dana + Security/Legal |
-| Region/residency/encryption | Configurable region/retention; private objects and TLS | Paid staging region selection | Dana + Security/Legal |
-| Database size | ~$15 single-node managed staging; managed HA production | Production apply | CTO + Engineering |
-| Forty-job incident cause | Treat as unknown and survive every plausible loss point | Final incident-control claim | Dana + application engineer |
-
-### Work that should start without waiting
-
-1. Implement typed settings, job states, retry rules, idempotency, and the seeded
-   fault policy with deterministic unit tests.
-2. Implement mocked PostgreSQL, Valkey, Spaces, and inference adapters.
-3. Implement the API and worker while keeping every external client behind an
-   interface and every network call behind a timeout.
-4. Replace the current soft-fail CI scaffold with blocking lint, strict typing,
-   tests, secret scanning, dependency scanning, and image build gates.
-5. Build Terraform module interfaces and validate plans without applying paid
-   resources.
-6. Prepare Locust scenarios and staging-only failure scripts.
-
-This work is reversible and does not require customer data or production
-credentials.
+Working defaults (traffic shape, RPO/RTO, budget ceiling, identity, scanning,
+region) are recorded in the [assumption log](../client/assumption-log.md) with
+owners and close dates. Staging currently uses a **named temporary auth
+exception** until Dana chooses an identity provider.
 
 ## Disagreements with Dana’s note—and why
 
@@ -148,7 +120,7 @@ credentials.
 8. **Do not interpret “please do not 10× the bill” as approval for anything
    below $4,000.** Dana and the CTO should set a target and a hard ceiling.
 
-## TODOs
+## Explicit exclusions (deferred)
 
 - Production Kubernetes and Helm.
 - Self-managed production PostgreSQL or Valkey.
@@ -223,47 +195,16 @@ rather than leaving it implicit.
 
 | Week | Dana / CTO action | Engineering action | Exit evidence |
 |------|-------------------|--------------------|---------------|
-| 0 — now | Approve this direction; assign owners; choose recovery target and Part 1 target/hard ceiling; provide incident and security inputs | Finalize interfaces and acceptance criteria | Written decisions or explicit temporary assumptions |
-| 1 | Confirm migration arrival/pacing and identity test path | Domain rules, adapters, unit tests, blocking CI, container image | Deterministic tests pass; no live-service calls in unit CI |
-| 2 | Approve low-cost staging spend/region and identity provider—or a named expiring staging-auth exception | Terraform foundations, private VPC/data path, App Spec CI, clean-account staging deployment | Redacted deploy logs plus working staging authentication and private database/Valkey connectivity |
-| 3 | Confirm representative PDFs and completion target | Upload/status flow, Locust load/soak, timeout/retry/DLQ and queue-loss tests | Measured throughput, p95 queue wait, error rate, and cap adherence |
-| 4 | Attend recovery/security review | Worker-kill, rolling deploy, PostgreSQL restore and standby failover, vendor isolation, malformed/scanner-positive tests | Recovery, failure, and security evidence attached |
-| 5 | Approve migration pace, support window, and rollback authority | Tune alerts, DLQ and restore runbooks, cost/headroom report, rollback rehearsal | All applicable readiness gates pass |
-| 6 | Authorize go-live only if evidence passes | Freeze known-good image/config, execute paced migration, monitor and support | Go/no-go record and retained rollback |
+| 0 — now | Approve direction; set target/hard budget ceiling and RPO/RTO; assign owners; provide incident/security inputs | Publish this recommendation; keep staging access documented | Written decisions or named temporary assumptions |
+| 1 | Choose identity provider or extend the staging-auth exception with expiry | Flip staging toward real auth; vendor-isolation tests on live stack | IdP path chosen; cross-vendor denial evidenced |
+| 2 | Confirm migration arrival/pacing and representative PDFs | Locust load/soak; timeout/retry/DLQ and queue-loss tests | Measured throughput, p95 queue wait, error rate |
+| 3 | Approve production spend/region if evidence supports sizing | Production Terraform prep (human-gated); chaos drills (worker kill, deploy drain) | Drill logs + job timelines attached |
+| 4 | Attend recovery/security review | PostgreSQL restore and standby failover rehearsal; rollback rehearsal | Restore/failover/rollback evidence attached |
+| 5 | Approve migration pace, support window, rollback authority | Cost/headroom report; runbooks with named owners | All applicable readiness gates pass |
+| 6 | Authorize go-live only if evidence passes | Freeze known-good image/config; paced migration; monitor | Go/no-go record and retained rollback |
 
-## What “ready” means
-
-The platform is not production-ready because a diagram exists or because a
-staging upload succeeds. Production approval requires evidence for:
-
-- representative load and sustained soak;
-- capacity headroom within inference quota and budget;
-- deterministic timeout, retry, and dead-letter behavior;
-- worker death and Valkey queue-loss recovery;
-- rolling deployment and rollback;
-- PostgreSQL point-in-time restore and managed-standby failover;
-- vendor isolation, upload validation, secret handling, and audit events;
-- documented runbooks with named owners.
-
-Missing evidence is a **FAIL**, not “not tested.” A temporary exception must
-name its owner, expiry, blast radius, and compensating control.
-
-## Plain-language glossary
-
-- **App Platform:** DigitalOcean’s managed service for running the API and
-  background workers without operating Kubernetes.
-- **PostgreSQL ledger:** The authoritative database record that a job exists and
-  what happened to it.
-- **Valkey:** A Redis-compatible fast queue/cache. Useful for transport, not the
-  only copy of customer work.
-- **Spaces:** Private object storage for PDFs.
-- **RPO:** The maximum recent data that might need recovery or customer
-  resubmission after a serious failure.
-- **RTO:** How long recovery may take.
-- **HA (high availability):** A primary plus ready standby that can take over;
-  a single managed node is not HA.
-- **Dead letter:** A terminal job state after the allowed retries are exhausted.
-- **Idempotent:** Safe to repeat without creating duplicate results.
+Production approval requires passing the binary gates in
+[evidence/README.md](../evidence/README.md). Staging smoke alone is not enough.
 
 ## Supporting detail
 

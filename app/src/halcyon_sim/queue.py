@@ -7,11 +7,18 @@ from typing import Protocol
 from uuid import UUID
 
 from redis.asyncio import Redis
+from redis.asyncio.retry import Retry
+from redis.backoff import ExponentialBackoff
+from redis.exceptions import ConnectionError, RedisError, TimeoutError
 
 from halcyon_sim.config import Settings
 
 PENDING_KEY = "halcyon:jobs:pending"
 PROCESSING_KEY = "halcyon:jobs:processing"
+
+
+class QueueUnavailableError(RuntimeError):
+    """The wake transport could not accept a job after bounded retries."""
 
 
 class JobQueue(Protocol):
@@ -71,8 +78,12 @@ class ValkeyJobQueue:  # pragma: no cover - requires live Valkey
 
     async def enqueue(self, job_id: UUID) -> None:
         # Avoid duplicates in pending; processing checked by reconciler.
-        await self._client.lrem(self._pending, 0, str(job_id))
-        await self._client.rpush(self._pending, str(job_id))
+        try:
+            await self._client.lrem(self._pending, 0, str(job_id))
+            await self._client.rpush(self._pending, str(job_id))
+        except RedisError as exc:
+            msg = "Valkey enqueue failed after retries"
+            raise QueueUnavailableError(msg) from exc
 
     async def pop_wake(self, *, timeout_seconds: int = 5) -> UUID | None:
         item = await self._client.blmove(
@@ -122,6 +133,11 @@ def build_job_queue(settings: Settings) -> JobQueue:
         settings.valkey_url.get_secret_value(),
         decode_responses=False,
         health_check_interval=30,
+        retry=Retry(
+            ExponentialBackoff(cap=1.0, base=0.1),
+            retries=3,
+            supported_errors=(ConnectionError, TimeoutError),
+        ),
         socket_connect_timeout=5,
         socket_keepalive=True,
         socket_timeout=10,

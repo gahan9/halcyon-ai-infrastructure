@@ -29,8 +29,9 @@ spdx: MIT
 |-----------|--------|----------------------|------------|-------|
 | Design scaffold + client checklist | 2026-08-15 | halcyon-001 | High | Done this phase |
 | Primary-requirement architecture adaptation + executive brief | 2026-08-15 | halcyon-006 | High | Done; proposed pending human review |
-| Dana answers + ADR-001 accepted | 2026-08-22 | halcyon-002 | Unknown | Blocks implement |
-| Sim app + Terraform + staging evidence | 2026-09-05 | halcyon-003, halcyon-007 | Unknown | After checklist; 7 readiness gates currently FAIL |
+| Dana answers + ADR-001 accepted | 2026-08-22 | halcyon-002 | Medium | Hard locks still open; prep uses A-PROD-PREP-01 |
+| Sim app + Terraform + staging evidence | 2026-09-05 | halcyon-003, halcyon-007, halcyon-009 | Medium | Staging smoke + production prep done; evidence gates FAIL |
+| Production foundations apply (human-gated) | when plan approved | halcyon-009 | Medium | `scripts/production_tf_prep.sh` → reviewed apply |
 | Enterprise migration support window | ~six weeks from kickoff | halcyon-004 | Unknown | Depends on load answers |
 | Part 2 self-host design lock | ~+6 months | halcyon-005 | Low | Needs §F disambiguation |
 

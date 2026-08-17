@@ -8,6 +8,7 @@ queue, and private Spaces storage. Operators must use protected CI and
 environment-scoped credentials; these documents do not authorize live changes.
 
 - [Deploy rollback](deploy-rollback.md)
+- [Production preparation](production-prep.md)
 - [Reconciliation and DLQ](reconciliation-dlq.md)
 - [Restore and failover](restore-failover.md)
 - [Secret rotation](secret-rotation.md)

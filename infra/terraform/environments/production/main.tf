@@ -17,5 +17,6 @@ module "part1_foundation" {
   spaces_bucket_name              = var.spaces_bucket_name
   spaces_force_destroy            = false
   registry_name                   = var.registry_name
+  create_registry                 = var.create_registry
   registry_subscription_tier_slug = var.registry_subscription_tier_slug
 }

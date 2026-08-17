@@ -8,10 +8,10 @@ exist. **Live apply, deploy, load, chaos, restore, and production-readiness
 claims remain blocked** until checklist approvals and spend authorization.
 
 An authorized **staging-only** bring-up experiment is recorded in
-[staging-bring-up.md](staging-bring-up.md). That note documents foundations,
-App Platform smoke (`/healthz`, upload → `202`, status → `succeeded`), and
-temporary local-auth exceptions. It does **not** satisfy the production-readiness
-gates below.
+[staging-bring-up.md](staging-bring-up.md) with step-by-step access in
+[access.md](access.md). That note documents foundations, App Platform smoke
+(`/healthz`, upload → `202`, status → `succeeded`), and temporary local-auth
+exceptions. It does **not** satisfy the production-readiness gates below.
 
 ## Planned demonstrations
 
@@ -57,7 +57,7 @@ credentials.
 | Check | Command | Artifact |
 |-------|---------|----------|
 | Unit tests | `cd app && uv sync --all-extras && uv run pytest -x --cov=halcyon_sim --cov-report=term-missing --cov-report=xml:../artifacts/unit/coverage.xml --ignore=tests/integration` | `artifacts/unit/coverage.xml` |
-| Terraform validate | `terraform -chdir=infra/terraform/environments/staging init -backend=false && terraform -chdir=infra/terraform/environments/staging validate -json > artifacts/terraform/staging-validate.json` | `artifacts/terraform/staging-validate.json`; apply remains gated |
+| Terraform validate | `terraform -chdir=infra/terraform/environments/staging init -backend=false && terraform -chdir=infra/terraform/environments/staging validate`; same for `environments/production` | CI `terraform` job; apply remains human-gated |
 | Docker build | `docker build --tag halcyon-sim:evidence app` | Local image `halcyon-sim:evidence` plus captured build log |
 | Staging load | `LOAD_ENV=staging STAGING_API_BASE_URL=... STAGING_API_BEARER_TOKEN=... uvx --from locust locust -f tests/load/locustfile.py --headless --html artifacts/load/report.html --csv artifacts/load/results` | `artifacts/load/report.html`, `artifacts/load/results*.csv`; never use production credentials |
 | Chaos dry runs | `APP_ID=... WORKER_COMPONENT=... bash scripts/chaos/worker_kill.sh --env=staging`; run the other scripts with their documented variables | Captured stdout under `artifacts/chaos/`; scripts only describe drills and do not mutate staging |

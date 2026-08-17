@@ -63,6 +63,9 @@ def test_build_job_queue_checks_idle_connections(
         Settings(_env_file=None, valkey_url=SecretStr("valkey://localhost:6379"))
     )
 
+    retry = captured.pop("retry")
+    assert retry.__class__.__name__ == "Retry"
+    assert retry._retries == 3
     assert captured == {
         "url": "valkey://localhost:6379",
         "decode_responses": False,

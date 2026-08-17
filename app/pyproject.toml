@@ -45,6 +45,7 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
   "integration: component interaction tests (skip without credentials)",
+  "e2e: live staging end-to-end tests (skip without explicit environment)",
 ]
 
 [tool.coverage.run]

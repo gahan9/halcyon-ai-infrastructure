@@ -8,6 +8,8 @@ Terraform provisions foundations only; this directory owns the App Spec.
 |------|---------|
 | `app-spec.staging.yaml` | Versioned staging App Spec (placeholders + `SECRET` keys) |
 | `app-spec.production.yaml` | Production template — do not apply without approvals |
+| `staging.nonsecret.env` | Live staging non-secret IDs/hosts |
+| `production.nonsecret.env.example` | Production non-secret template filled after apply |
 
 For local or App Platform deployment, inject these secrets through a
 gitignored `.env` or App Platform `SECRET` values:
@@ -17,4 +19,5 @@ gitignored `.env` or App Platform `SECRET` values:
 - `SPACES_CREDENTIALS_JSON` — Spaces access/secret JSON matching `APP_ENV`
 - `LLM_CREDENTIALS_JSON` — only if leaving fake inference
 
-See `docs/operations/secret-rotation.md` for App Platform `SECRET` injection.
+See `docs/operations/secret-rotation.md` for App Platform `SECRET` injection
+and `docs/operations/production-prep.md` for the production plan/apply sequence.

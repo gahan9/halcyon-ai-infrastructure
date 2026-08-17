@@ -27,7 +27,7 @@ from halcyon_sim.pdf_validate import (
     sanitize_filename,
     validate_pdf_bytes,
 )
-from halcyon_sim.queue import JobQueue
+from halcyon_sim.queue import JobQueue, QueueUnavailableError
 from halcyon_sim.runtime import RuntimeStack, build_runtime_stack
 from halcyon_sim.storage import ObjectStorage
 
@@ -164,7 +164,13 @@ def create_app(
             raise
 
         if is_enqueueable(job.status):
-            await state.queue.enqueue(job.job_id)
+            try:
+                await state.queue.enqueue(job.job_id)
+            except QueueUnavailableError:
+                logger.warning(
+                    "queue enqueue unavailable; PostgreSQL reconciler will recover",
+                    exc_info=True,
+                )
 
         return UploadAcceptedResponse(job_id=job.job_id, status=job.status)
 

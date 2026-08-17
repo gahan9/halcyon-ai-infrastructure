@@ -12,22 +12,24 @@ only when useful with vendors or enterprise customers.
 
 ## Executive decision brief
 
-- 🟡 **Health:** The design is ready for customer review, but production
-  readiness is **blocked** by unanswered traffic, recovery, incident, budget,
-  and data-handling questions.
+- 🟡 **Health:** Architecture and production *prep* artifacts are ready.
+  Production-ready claims remain **blocked** until evidence gates and Dana/CTO
+  hard answers land. Engineering may proceed using assumption-log defaults
+  documented in [production-prep.md](../operations/production-prep.md).
 - ✅ **Top recommendation:** Use App Platform with managed PostgreSQL, managed
   Valkey, and Spaces; automate delivery with Terraform and CI.
-- ⚠️ **Decision needed:** Dana and the CTO should assign owners and answer the
-  blocking questions below before implementation or DigitalOcean spend.
+- ⚠️ **Decision needed:** Dana and the CTO should still assign owners and answer
+  the questions below before calling cutover “production-ready.” Prep defaults
+  do not replace a hard budget ceiling or SLA text.
 
 | Decision or input | Response owner | Needed by | Status / blocker |
 |-------------------|----------------|-----------|------------------|
-| Migration arrival and completion rates | **Dana + customer migration lead** | Before worker sizing | 🔴 Blocked — no measured workload |
-| Forty-job incident timeline | **Dana + application engineer** | Before job-state design is finalized | 🔴 Blocked — root cause unknown |
-| Data-loss and recovery tolerance | **Dana + CTO + enterprise owner** | Before production architecture sign-off | 🔴 Blocked — SLA text missing |
-| Part 1 target and hard cost ceiling | **CTO / budget owner** | Before Terraform implementation | 🔴 Blocked — $400 is observed spend only |
-| Residency, retention, encryption, audit, identity, tagging, and malware-scan needs | **Dana + customer security/legal owner** | Before storage/region selection | 🔴 Blocked — requirements missing |
-| Architecture recommendation and implementation plan | **FDE** | After the above inputs | 🟡 Ready for review, not approval |
+| Migration arrival and completion rates | **Dana + customer migration lead** | Before worker sizing lock | 🟡 Prep uses provisional 2+2 App Spec; reopen on measured load |
+| Forty-job incident timeline | **Dana + application engineer** | Before claiming root-cause fix | 🟡 Design covers plausible modes; forensics still open |
+| Data-loss and recovery tolerance | **Dana + CTO + enterprise owner** | Before cutover claim | 🟡 Prep uses RPO≤15m / RTO≤60m (A-REL-01) |
+| Part 1 target and hard cost ceiling | **CTO / budget owner** | Before unattended spend | 🟡 Prep stays in ~$360–750/mo band excl. inference |
+| Residency, retention, encryption, audit, identity, tagging, and malware-scan needs | **Dana + customer security/legal owner** | Before storage/region lock | 🟡 Prep: nyc3, fail_closed auth, scan off until §E |
+| Architecture recommendation and implementation plan | **FDE** | After the above inputs | 🟢 Prep unblocked; apply still human-gated |
 
 ---
 

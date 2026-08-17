@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import pytest
 from pydantic import SecretStr
@@ -45,6 +46,31 @@ def test_build_object_storage_rejects_bad_endpoint() -> None:
 def test_build_job_queue_requires_url() -> None:
     with pytest.raises(ValueError, match="VALKEY_URL"):
         build_job_queue(Settings(_env_file=None))
+
+
+def test_build_job_queue_checks_idle_connections(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Any] = {}
+
+    def fake_from_url(url: str, **kwargs: Any) -> object:
+        captured["url"] = url
+        captured.update(kwargs)
+        return object()
+
+    monkeypatch.setattr("halcyon_sim.queue.Redis.from_url", fake_from_url)
+    build_job_queue(
+        Settings(_env_file=None, valkey_url=SecretStr("valkey://localhost:6379"))
+    )
+
+    assert captured == {
+        "url": "valkey://localhost:6379",
+        "decode_responses": False,
+        "health_check_interval": 30,
+        "socket_connect_timeout": 5,
+        "socket_keepalive": True,
+        "socket_timeout": 10,
+    }
 
 
 def test_build_inference_client_local_fake() -> None:

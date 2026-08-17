@@ -58,6 +58,20 @@ def object_key_for(vendor_id: UUID, job_id: UUID) -> str:
     return f"vendors/{vendor_id}/jobs/{job_id}/source.pdf"
 
 
+def object_belongs_to_vendor(
+    key: str, metadata: dict[str, str], vendor_id: UUID
+) -> bool:
+    """Validate ownership from the generated key and optional object metadata."""
+
+    if not key.startswith(f"vendors/{vendor_id}/jobs/"):
+        return False
+    normalized = {
+        name.lower().replace("_", "-"): value for name, value in metadata.items()
+    }
+    metadata_vendor = normalized.get("vendor-id")
+    return metadata_vendor is None or metadata_vendor == str(vendor_id)
+
+
 class InMemoryObjectStorage:
     """Test double for Spaces."""
 
@@ -158,9 +172,9 @@ class SpacesObjectStorage:  # pragma: no cover - requires live Spaces credential
                 ContentType="application/pdf",
                 ACL="private",
                 Metadata={
-                    "vendor_id": str(vendor_id),
-                    "job_id": str(job_id),
-                    "content_sha256": content_sha256,
+                    "vendor-id": str(vendor_id),
+                    "job-id": str(job_id),
+                    "content-sha256": content_sha256,
                 },
             )
 
@@ -202,8 +216,8 @@ class SpacesObjectStorage:  # pragma: no cover - requires live Spaces credential
 
         def _sign() -> str:
             head = self._get_client().head_object(Bucket=self._bucket, Key=key)
-            meta = {k.lower(): v for k, v in head.get("Metadata", {}).items()}
-            if meta.get("vendor_id") != str(vendor_id):
+            metadata = head.get("Metadata", {})
+            if not object_belongs_to_vendor(key, metadata, vendor_id):
                 msg = "object ownership check failed"
                 raise PermissionError(msg)
             url = self._get_client().generate_presigned_url(

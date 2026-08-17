@@ -11,6 +11,7 @@ Operational helpers for Terraform prep and staging/production drills.
 | `bootstrap_tf_state.sh` | Create a Spaces key with WSL `doctl`, bootstrap the state bucket, and write the credential env file |
 | `production_tf_prep.sh` | Write `production.tfvars`, remote `init`, `validate`, `plan` (no apply) |
 | `production_tf_apply.sh` | Apply reviewed plan only when `CONFIRM_PRODUCTION_APPLY=yes` |
+| `production_deploy_app.sh` | Build/push (optional) and deploy App Platform via WSL `doctl` |
 | `merge_nonsecret_env.py` | Merge `deploy/*.nonsecret.env` into local `.env` |
 | `fetch_nonsecret_staging.py` | Refresh staging non-secret IDs from live resources |
 

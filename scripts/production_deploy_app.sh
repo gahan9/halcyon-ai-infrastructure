@@ -11,6 +11,7 @@ REGISTRY="${HALCYON_REGISTRY:-halcyonstg202608161050}"
 IMAGE_TAG="${HALCYON_IMAGE_TAG:-production-$(date -u +%Y%m%d%H%M%S)}"
 APP_NAME="${HALCYON_PROD_APP_NAME:-halcyon-sim-production}"
 SKIP_IMAGE_BUILD="${SKIP_IMAGE_BUILD:-0}"
+DEPLOY_PROFILE="${HALCYON_DEPLOY_PROFILE:-smoke}"
 
 doctl_cmd() {
   doctl --context "$DOCTL_CONTEXT" "$@"
@@ -62,6 +63,24 @@ else
 fi
 
 echo "== database connections =="
+wait_for_database() {
+  local db_id="$1"
+  local db_name="$2"
+  for _ in $(seq 1 60); do
+    status="$(doctl_cmd databases get "$db_id" --format Status --no-header)"
+    if [[ "$status" == "online" ]]; then
+      echo "${db_name} online"
+      return 0
+    fi
+    echo "waiting for ${db_name} status=${status}"
+    sleep 10
+  done
+  echo "timeout waiting for ${db_name}" >&2
+  return 1
+}
+wait_for_database "$PG_ID" postgres
+wait_for_database "$VK_ID" valkey
+
 doctl_cmd databases connection "$PG_ID" -o json >"$SPEC_DIR/pg-conn.json"
 doctl_cmd databases connection "$VK_ID" -o json >"$SPEC_DIR/vk-conn.json"
 
@@ -73,6 +92,7 @@ export SPACES_ACCESS_ID="$SPACES_ACCESS_KEY_ID"
 export SPACES_SECRET_KEY="$SPACES_SECRET_ACCESS_KEY"
 export HALCYON_APP_NAME="$APP_NAME"
 export HALCYON_PROD_DEPLOY_DIR="$SPEC_DIR"
+export HALCYON_DEPLOY_PROFILE="$DEPLOY_PROFILE"
 
 python3 - <<'PY'
 import json
@@ -80,6 +100,7 @@ import os
 from pathlib import Path
 
 spec_dir = Path(os.environ["HALCYON_PROD_DEPLOY_DIR"])
+profile = os.environ.get("HALCYON_DEPLOY_PROFILE", "smoke")
 pg = json.loads((spec_dir / "pg-conn.json").read_text())
 vk = json.loads((spec_dir / "vk-conn.json").read_text())
 if isinstance(pg, list):
@@ -97,20 +118,36 @@ valkey_url = vk["uri"]
 if "private-" in db_url or "private-" in valkey_url:
     raise SystemExit("refusing private DB hosts without matching App Platform VPC region")
 
+if profile == "smoke":
+    app_env = "local"
+    auth_mode = "local"
+    secret_env_name = "local"
+    worker_concurrency = "1"
+    inference_concurrency = "2"
+    inference_timeout = "60"
+    llm_json = None
+else:
+    app_env = "production"
+    auth_mode = "fail_closed"
+    secret_env_name = "production"
+    worker_concurrency = "2"
+    inference_concurrency = "10"
+    inference_timeout = "240"
+    llm_json = json.dumps(
+        {
+            "schema_version": 1,
+            "environment": "production",
+            "api_key": "production-placeholder-until-inference-key",
+        },
+        separators=(",", ":"),
+    )
+
 spaces_json = json.dumps(
     {
         "schema_version": 1,
-        "environment": "production",
+        "environment": secret_env_name,
         "access_key": os.environ["SPACES_ACCESS_ID"],
         "secret_key": os.environ["SPACES_SECRET_KEY"],
-    },
-    separators=(",", ":"),
-)
-llm_json = json.dumps(
-    {
-        "schema_version": 1,
-        "environment": "production",
-        "api_key": "production-placeholder-until-inference-key",
     },
     separators=(",", ":"),
 )
@@ -140,9 +177,9 @@ common_data = (
 )
 
 api_envs = (
-    plain_env("APP_ENV", "production")
+    plain_env("APP_ENV", app_env)
     + plain_env("APP_PORT", "8080")
-    + plain_env("AUTH_MODE", "fail_closed")
+    + plain_env("AUTH_MODE", auth_mode)
     + plain_env("UPLOAD_SCAN_REQUIRED", "false")
     + plain_env("SIMULATED_TIMEOUT_RATE", "0")
     + plain_env("SIMULATED_FAILURE_RATE", "0")
@@ -150,11 +187,11 @@ api_envs = (
 )
 
 worker_envs = (
-    plain_env("APP_ENV", "production")
-    + plain_env("AUTH_MODE", "fail_closed")
-    + plain_env("WORKER_CONCURRENCY", "2")
-    + plain_env("INFERENCE_MAX_CONCURRENCY", "10")
-    + plain_env("INFERENCE_TIMEOUT_SECONDS", "240")
+    plain_env("APP_ENV", app_env)
+    + plain_env("AUTH_MODE", auth_mode)
+    + plain_env("WORKER_CONCURRENCY", worker_concurrency)
+    + plain_env("INFERENCE_MAX_CONCURRENCY", inference_concurrency)
+    + plain_env("INFERENCE_TIMEOUT_SECONDS", inference_timeout)
     + plain_env("JOB_MAX_RETRIES", "3")
     + plain_env("JOB_LEASE_SECONDS", "570")
     + plain_env("WORKER_GRACE_PERIOD_SECONDS", "600")
@@ -162,7 +199,7 @@ worker_envs = (
     + plain_env("SIMULATED_FAILURE_RATE", "0")
     + plain_env("LLM_BASE_URL", "https://inference.do-ai.run")
     + plain_env("LLM_MODEL", "local-fake")
-    + secret_env("LLM_CREDENTIALS_JSON", llm_json)
+    + (secret_env("LLM_CREDENTIALS_JSON", llm_json) if llm_json else "")
     + common_data
 )
 
@@ -207,7 +244,7 @@ workers:
 out = spec_dir / "app-spec.yaml"
 out.write_text(spec, encoding="utf-8")
 out.chmod(0o600)
-print(f"SPEC_OK bytes={out.stat().st_size} tag={image_tag}")
+print(f"SPEC_OK profile={profile} bytes={out.stat().st_size} tag={image_tag}")
 print(f"PG_HOST={pg['host']}")
 print(f"VK_HOST={vk['host']}")
 PY

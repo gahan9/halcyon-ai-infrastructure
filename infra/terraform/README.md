@@ -1,10 +1,18 @@
 <!-- SPDX-License-Identifier: MIT -->
 
-# Terraform stubs (not applied)
+# Terraform foundation (not applied)
 
-**Phase:** Scaffold only.
+**Phase:** Modules and thin environment roots now exist; deployment remains
+gated.
 
-## Intended modules (later)
+The Option B foundation modules under `modules/` and the `staging` /
+`production` roots under `environments/` are ready for formatting and
+validation. Do not apply them until the client confirms the remaining ADR-001
+decisions, backend locking and access controls are verified, current
+DigitalOcean SKUs are checked, and a reviewed plan passes the documented
+approval gates.
+
+## Implemented foundation modules
 
 | Module / resource | Purpose |
 |-------------------|---------|
@@ -12,9 +20,7 @@
 | `digitalocean_database_cluster` (Valkey) | Queue / cache |
 | `digitalocean_spaces_bucket` | Private PDFs |
 | `digitalocean_container_registry` | Immutable images |
-| Versioned App Spec deployment | API + worker components; secure CI owns App Platform secret values |
 | Project / VPC / bindable wiring | Least privilege, private paths, and managed-database bindables |
-| Alerts / budgets | API health, worker failures, queue lag, database health, inference spend |
 
 The App Platform application itself is deployed from the versioned App Spec by
 secure CI; it is intentionally not a `digitalocean_app` resource in this design.
@@ -61,18 +67,17 @@ Environment database defaults:
 | Staging/exercise | 1 GiB shared single node, currently starting at ~$15/month | Lowest managed entry cost; suitable for functional and restore evidence, but explicitly not HA |
 | Production | 2 GiB primary + at least one matching standby, currently starting around ~$60/month total | Managed HA/failover baseline; avoids transferring database operations to the application team |
 
-The planned module must keep node size, standby count, and storage as typed
-inputs and add production validation that rejects zero standbys before any apply
-path exists. No `.tf` implementation or enforcement exists in this scaffold.
+The managed-data module keeps node size, standby count, and storage as typed
+inputs. It rejects zero PostgreSQL standbys in production before apply and also
+enforces the staging single-node / production HA split for Valkey.
 Current prices and SKU availability remain unverified until the purchase-date
 plan.
 
-Planned layout:
+Current layout:
 
 ```
 infra/terraform/
   README.md
-  bootstrap/                       # optional remote-state prerequisites
   modules/
     part1_foundation/              # reusable infrastructure composition library
       main.tf

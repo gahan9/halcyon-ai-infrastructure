@@ -193,7 +193,7 @@ a named, expiring risk acceptance.
 | `auth` | Convert a validated principal into immutable `vendor_id` | Fake issuer is permitted only for `APP_ENV=local`; all other environments reject fake auth; authorization queries always include `vendor_id` |
 | `storage` | Private Spaces object operations through an async-safe adapter | Generated key only; private ACL + scoped credentials + TLS; bounded temporary storage; metadata never grants authorization; compensate or sweep orphan objects |
 | `jobs` | PostgreSQL repository and state-transition service | Conditional transitions, attempt history, lease expiry, idempotency key, and durable DLQ; only `accepted`/`retry` may be claimed |
-| `queue` | Enqueue/claim opaque `job_id` values and reconcile from PostgreSQL | Payload contains no PDF, token, result, or vendor-controlled path; queue loss is recoverable |
+| `queue` | Enqueue/pop/ack opaque `job_id` wake items and reconcile from PostgreSQL | Payload contains no PDF, token, result, or vendor-controlled path; PostgreSQL owns claim/lease; queue loss is recoverable |
 | `worker` | Claim leased `accepted`/`retry` work, fetch its input, invoke inference, persist outcome, acknowledge | `quarantined` is never leased, enqueued, or read for inference; bounded concurrency; durable state precedes acknowledgement; SIGTERM drains or releases lease |
 | `inference` | One async OpenAI-compatible client | Explicit timeout, classified retries, PostgreSQL advisory-lock semaphore capped at 10 across all replicas/releases, secret unwrapped only at I/O, no prompt/body logging |
 | `faults` | Select deterministic delay/timeout/failure outcome | Dependency-injected; zero-rate default; production guard rejects enabled simulation |

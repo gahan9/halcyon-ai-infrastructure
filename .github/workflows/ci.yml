@@ -33,7 +33,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@4db96194c378173c5356351e3ddeae2c12692256 # v5.2.2
+        uses: astral-sh/setup-uv@4db96194c378173c656ce18a155ffc14a9fc4355 # v5.2.2
         with:
           enable-cache: true
 
@@ -69,7 +69,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@4db96194c378173c5356351e3ddeae2c12692256 # v5.2.2
+        uses: astral-sh/setup-uv@4db96194c378173c656ce18a155ffc14a9fc4355 # v5.2.2
         with:
           enable-cache: true
 
@@ -95,7 +95,7 @@ jobs:
           fi
 
       - name: Gitleaks (secret scan)
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc022b4aecac9d38f89268173e6 # v2.3.9
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

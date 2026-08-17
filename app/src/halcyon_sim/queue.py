@@ -119,6 +119,11 @@ def build_job_queue(settings: Settings) -> JobQueue:
         msg = "VALKEY_URL is required"
         raise ValueError(msg)
     client = Redis.from_url(
-        settings.valkey_url.get_secret_value(), decode_responses=False
+        settings.valkey_url.get_secret_value(),
+        decode_responses=False,
+        health_check_interval=30,
+        socket_connect_timeout=5,
+        socket_keepalive=True,
+        socket_timeout=10,
     )
     return ValkeyJobQueue(client)
